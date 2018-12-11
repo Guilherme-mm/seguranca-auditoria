@@ -5,8 +5,9 @@ require "../vendor/autoload.php";
 
 use Nmap\Nmap;
 
-const GET_AUDIT_FROM_API = true;
-const GET_HOST_SYSTEM_DATA_FROM_API = true;
+const GET_AUDIT_FROM_API = false;
+const GET_HOST_SYSTEM_DATA_FROM_API = false;
+const GET_SERVER_LANGUAGE = false;
 
 $falseUrlData = [];
 
@@ -63,7 +64,7 @@ if(GET_AUDIT_FROM_API){
     persistDataOnFile($falseUrlData, "dataOutput.json");
 } else {
     echo "#### Getting audit data cached JSON file ####" . PHP_EOL;
-    $falseUrlData = json_decode(file_get_contents("../datasets/ipdataoutput.json"));
+    $falseUrlData = json_decode(file_get_contents("../datasets/dataOutput.json"));
 }
 
 //Coleta dados sobre o system dos hosts e atualiza o JSON de output gerado na etapa anterior
@@ -82,7 +83,7 @@ if(GET_HOST_SYSTEM_DATA_FROM_API){
 
             echo "# Getting data from $url" . PHP_EOL;
             
-            $tempOutputFilePath = $nmap->scan(['scanme.nmap.org']);
+            $tempOutputFilePath = $nmap->scan(["$url"]);
             $outputXMLString = file_get_contents($tempOutputFilePath);
             $outputXML = simplexml_load_string($outputXMLString);
             $outputAsJSON = json_encode($outputXML);
@@ -104,5 +105,70 @@ if(GET_HOST_SYSTEM_DATA_FROM_API){
     persistDataOnFile($falseUrlData, "dataOutput.json");
 }
 
+//Coleta dados de cabeçalho para determinar a linguagem da pagina
+if(GET_SERVER_LANGUAGE){
+    echo "#### Getting Language information from external URLs ####" . PHP_EOL;
+    foreach($falseUrlData as &$urlData){
+        echo "# Getting data from $urlData->url" . PHP_EOL;
+        $ch = curl_init();
+        
+        curl_setopt($ch, CURLOPT_URL, $urlData->url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_HEADER, 1);
+            
+        //Running the query
+        $response = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        $headers = get_headers_from_curl_response($response);
+        curl_close($ch);
+    
+        if(isset($headers["Server"])){
+            $urlData->Server = $headers["Server"];
+        }
+    
+        if(isset($headers["http_code"])){
+            $urlData->httpCode = $headers["http_code"];
+        }
+    
+        if(isset($headers["X-Powered-By"])){
+            $urlData->serverLanguage = $headers["X-Powered-By"];
+        }
+    
+    }
+    
+    persistDataOnFile($falseUrlData, "dataOutput.json");
+}
+
+//Coleta dados relacionados ao HTML
+echo "#### Getting alarmist words count from pages content ####" . PHP_EOL;
+$alarmWordsList = ["Atenção", "Atencao", "Ameaçar", "Perigo", "Repassem", "Espalhem", "Urgente", "Enganado", "Farsa", "Enganação", "Enganacao", "Enganar", "Sacanagem", "Colabore", "Divulgação", "Divulgacao", "Divulgue", "Compartilhe", "Contatos", "Corja", "Vergonha", "Grave", "Gravíssimo"];
+
+foreach($falseUrlData as &$urlData){
+    echo "# Counting for $urlData->url" . PHP_EOL;
+    $ch = curl_init();
+
+    curl_setopt($ch, CURLOPT_URL, $urlData->url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_HEADER, 1);
+
+    $response = curl_exec($ch);
+    $headers = get_headers_from_curl_response($response);
+    $alarmWordsCount = 0;
+
+    if(strpos($headers["http_code"], "404")){
+        continue;
+    } else {
+        $pageContent = strip_tags($response);
+        $pageContent = mb_strtolower($pageContent);
+
+        foreach($alarmWordsList as $word){
+            $alarmWordsCount += substr_count($pageContent, mb_strtolower($word));
+        }
+
+        $urlData->alarmWords = $alarmWordsCount;
+    }
+}
+
+persistDataOnFile($falseUrlData, "dataOutput.json");
 
 
