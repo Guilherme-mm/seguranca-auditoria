@@ -1,8 +1,11 @@
+
+
 USE db;
 
 CREATE TABLE IF NOT EXISTS `db`.`host_tb` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `ip` VARCHAR(45) NOT NULL,
+  `domain` VARCHAR(300) NOT NULL,
   `is_eu` TINYINT NULL,
   `continent` VARCHAR(45) NULL,
   `country` VARCHAR(45) NULL,
