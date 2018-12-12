@@ -1,8 +1,11 @@
+
+
 USE db;
 
 CREATE TABLE IF NOT EXISTS `db`.`host_tb` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `ip` VARCHAR(45) NOT NULL,
+  `domain` VARCHAR(300) NOT NULL,
   `is_eu` TINYINT NULL,
   `continent` VARCHAR(45) NULL,
   `country` VARCHAR(45) NULL,
@@ -30,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `db`.`url_tb` (
   `server_type` VARCHAR(100) NULL,
   `host_id` INT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `url_UNIQUE` (`url` ASC),
+  -- UNIQUE INDEX `url_UNIQUE` (`url` ASC),
   INDEX `url_host_fk_idx` (`host_id` ASC),
   CONSTRAINT `url_host_fk`
     FOREIGN KEY (`host_id`)
