@@ -25,6 +25,32 @@
         return $uniqueUrls;
     }
 
+    function getTrueUrls(){
+        //Getting data from csv
+        $csvFile = file('../datasets/true-news.csv');
+        $data = [];
+        foreach ($csvFile as $line) {
+            $data[] = str_getcsv($line);
+        }
+        
+        $urlMap = [];
+        $uniqueUrls = [];
+        //cleaning identical urls
+        foreach($data as $line){
+            $url = $line[0];
+
+            if(isset($urlMap[$url])){
+                continue;
+            } else {
+                $urlMap[$url] = true;
+                $uniqueUrls[] = $url;
+            }
+
+        }
+
+        return $uniqueUrls;
+    }
+
     function clearNmapResult($nmapResult){
         $clearedResult = (object)[
             "host" => (object)[],

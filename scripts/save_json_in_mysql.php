@@ -115,7 +115,7 @@
             die("Connection failed: " . $conecao->connect_error);
         } 
 
-        $sql = "INSERT INTO host_tb ( ip, domain, is_eu, continent, country, region, city, asn, organisation, is_tor, is_proxy, is_anonymous, is_known_attacker, is_known_abuser, is_threat, is_bogon)
+        $sql = "INSERT INTO host_tb ( ip, domain, continent, country, region, city, asn, organisation, is_eu, is_tor, is_proxy, is_anonymous, is_known_attacker, is_known_abuser, is_threat, is_bogon)
         VALUES ( 
             '{$host['ip']}',
             '{$host['domain']}',
