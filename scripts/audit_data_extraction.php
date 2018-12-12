@@ -8,6 +8,7 @@ use Nmap\Nmap;
 const GET_AUDIT_FROM_API = false;
 const GET_HOST_SYSTEM_DATA_FROM_API = false;
 const GET_SERVER_LANGUAGE = false;
+const GET_ALARM_WORDS_COUNT = false;
 
 $falseUrlData = [];
 
@@ -140,35 +141,37 @@ if(GET_SERVER_LANGUAGE){
 }
 
 //Coleta dados relacionados ao HTML
-echo "#### Getting alarmist words count from pages content ####" . PHP_EOL;
-$alarmWordsList = ["Atenção", "Atencao", "Ameaçar", "Perigo", "Repassem", "Espalhem", "Urgente", "Enganado", "Farsa", "Enganação", "Enganacao", "Enganar", "Sacanagem", "Colabore", "Divulgação", "Divulgacao", "Divulgue", "Compartilhe", "Contatos", "Corja", "Vergonha", "Grave", "Gravíssimo"];
-
-foreach($falseUrlData as &$urlData){
-    echo "# Counting for $urlData->url" . PHP_EOL;
-    $ch = curl_init();
-
-    curl_setopt($ch, CURLOPT_URL, $urlData->url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-    curl_setopt($ch, CURLOPT_HEADER, 1);
-
-    $response = curl_exec($ch);
-    $headers = get_headers_from_curl_response($response);
-    $alarmWordsCount = 0;
-
-    if(strpos($headers["http_code"], "404")){
-        continue;
-    } else {
-        $pageContent = strip_tags($response);
-        $pageContent = mb_strtolower($pageContent);
-
-        foreach($alarmWordsList as $word){
-            $alarmWordsCount += substr_count($pageContent, mb_strtolower($word));
+if(GET_ALARM_WORDS_COUNT){
+    echo "#### Getting alarmist words count from pages content ####" . PHP_EOL;
+    $alarmWordsList = ["Atenção", "Atencao", "Ameaçar", "Perigo", "Repassem", "Espalhem", "Urgente", "Enganado", "Farsa", "Enganação", "Enganacao", "Enganar", "Sacanagem", "Colabore", "Divulgação", "Divulgacao", "Divulgue", "Compartilhe", "Contatos", "Corja", "Vergonha", "Grave", "Gravíssimo"];
+    
+    foreach($falseUrlData as &$urlData){
+        echo "# Counting for $urlData->url" . PHP_EOL;
+        $ch = curl_init();
+    
+        curl_setopt($ch, CURLOPT_URL, $urlData->url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_HEADER, 1);
+    
+        $response = curl_exec($ch);
+        $headers = get_headers_from_curl_response($response);
+        $alarmWordsCount = 0;
+    
+        if(strpos($headers["http_code"], "404")){
+            continue;
+        } else {
+            $pageContent = strip_tags($response);
+            $pageContent = mb_strtolower($pageContent);
+    
+            foreach($alarmWordsList as $word){
+                $alarmWordsCount += substr_count($pageContent, mb_strtolower($word));
+            }
+    
+            $urlData->alarmWords = $alarmWordsCount;
         }
-
-        $urlData->alarmWords = $alarmWordsCount;
     }
+    
+    persistDataOnFile($falseUrlData, "dataOutput.json");
 }
-
-persistDataOnFile($falseUrlData, "dataOutput.json");
 
 
