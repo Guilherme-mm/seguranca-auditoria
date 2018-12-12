@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `db`.`url_tb` (
   `server_type` VARCHAR(100) NULL,
   `host_id` INT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `url_UNIQUE` (`url` ASC),
+  -- UNIQUE INDEX `url_UNIQUE` (`url` ASC),
   INDEX `url_host_fk_idx` (`host_id` ASC),
   CONSTRAINT `url_host_fk`
     FOREIGN KEY (`host_id`)
